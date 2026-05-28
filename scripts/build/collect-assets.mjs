@@ -30,6 +30,7 @@ function copyIfExists(src, dst) {
 // ── ffmpeg ──
 const ffmpegCandidates = [
     path.join(rootDir, "ffmpeg.exe"),
+    path.join(rootDir, "ghost-server", "node_modules", "ffmpeg-static", "ffmpeg.exe"),
     path.join(process.env.LOCALAPPDATA || "", "ffmpeg", "bin", "ffmpeg.exe"),
     path.join(process.env.LOCALAPPDATA || "", "Microsoft", "WinGet", "Links", "ffmpeg.exe"),
     path.join(rootDir, "..", "..", "Dossier", "Joiner", "node_modules", "ffmpeg-static", "ffmpeg.exe"),
