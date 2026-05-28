@@ -484,7 +484,7 @@ function getRealDateVariants(): string[] {
         const mS = monthsShort[d.getMonth()]; const mL = monthsLong[d.getMonth()];
         const patterns = [`${day} ${mS} ${year}`, `${day} ${mL} ${year}`, `${mS} ${day}, ${year}`, `${mL} ${day}, ${year}`, d.toISOString().slice(0, 10)];
         for (const p of patterns) { variants.add(p); variants.add(p.replace(/ /g, "\u00a0")); variants.add(p.replace(/\u00a0/g, " ")); }
-        variants.add(year.toString()); return [...variants].filter(v => v.length >= 4);
+        return [...variants].filter(v => v.length >= 8);
     } catch { return []; }
 }
 
