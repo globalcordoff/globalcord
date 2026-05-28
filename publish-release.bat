@@ -79,6 +79,11 @@ echo.
 echo  [4/8] Copie des assets (ffmpeg, node, modules...) vers %DIST_DIR%...
 
 node scripts\build\collect-assets.mjs
+if errorlevel 1 (
+    echo  [ERREUR] Collecte des assets echouee.
+    pause
+    exit /b 1
+)
 
 echo  [4/8] Assets copies.
 
@@ -87,6 +92,8 @@ echo.
 echo  [5/8] Compilation de Globalcord-Installer.exe...
 
 if not exist "%OUT_DIR%" mkdir "%OUT_DIR%"
+
+taskkill /F /IM Globalcord-Installer.exe /T >nul 2>&1
 
 powershell -NoProfile -ExecutionPolicy Bypass -File "build-installer.ps1"
 if errorlevel 1 (

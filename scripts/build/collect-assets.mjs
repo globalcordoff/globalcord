@@ -173,11 +173,15 @@ if (fs.existsSync(ghostServerSrc)) {
         // ── Copier ffmpeg.exe DANS ghost-server/ aussi ──
         // server.js tourne avec __dirname = dist/desktop/ghost-server/
         // It looks for ffmpeg at __dirname/../ffmpeg.exe (dist/desktop/ffmpeg.exe)
-
-        console.log("[collect] ffmpeg.exe also copied to ghost-server/ (local fallback)");
-            } catch (e) {
-                console.warn("[collect] ⚠️ Impossible de copier ffmpeg dans ghost-server:", e.message);
+        try {
+            const ffmpegLocal = path.join(distDir, "ffmpeg.exe");
+            const ffmpegGhost = path.join(ghostServerDst, "ffmpeg.exe");
+            if (fs.existsSync(ffmpegLocal)) {
+                fs.copyFileSync(ffmpegLocal, ffmpegGhost);
+                console.log("[collect] ffmpeg.exe also copied to ghost-server/ (local fallback)");
             }
+        } catch (e) {
+            console.warn("[collect] ⚠️ Impossible de copier ffmpeg dans ghost-server:", e.message);
         }
     }
 } else {
