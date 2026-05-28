@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.IO.Compression;
+using System.Net;
 using System.Net.Http;
 using System.Drawing;
 using System.Diagnostics;
@@ -360,7 +361,18 @@ namespace GlobalcordInstaller
             string json;
             try
             {
-                json = await _http.GetStringAsync(apiUrl);
+                using var latestResponse = await _http.GetAsync(apiUrl);
+                if (latestResponse.StatusCode == HttpStatusCode.NotFound)
+                {
+                    // Fallback when /releases/latest is unavailable (no releases yet or hidden latest)
+                    var releasesUrl = $"https://api.github.com/repos/{GITHUB_REPO}/releases";
+                    json = await _http.GetStringAsync(releasesUrl);
+                }
+                else
+                {
+                    latestResponse.EnsureSuccessStatusCode();
+                    json = await latestResponse.Content.ReadAsStringAsync();
+                }
             }
             catch (TaskCanceledException)
             {
@@ -374,7 +386,10 @@ namespace GlobalcordInstaller
             var zipUrl = ExtractJsonValue(json, "browser_download_url", DIST_ZIP);
             
             if (string.IsNullOrEmpty(zipUrl))
-                throw new Exception($"'{DIST_ZIP}' not found in the GitHub release. The release may not be published yet.");
+                throw new Exception(
+                    $"'{DIST_ZIP}' was not found in releases for '{GITHUB_REPO}'. " +
+                    "Publish a GitHub Release and attach globalcord-dist.zip."
+                );
 
             SetProgress(5, "Starting download...");
             var tmpZip = Path.Combine(Path.GetTempPath(), "globalcord-dist.zip");
