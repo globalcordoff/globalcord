@@ -5,6 +5,7 @@
  */
 
 import { addContextMenuPatch, NavContextMenuPatchCallback, removeContextMenuPatch } from "@api/ContextMenu";
+import * as DataStore from "@api/DataStore";
 import { isPanelHidden } from "@globalcordplugins/panelHide";
 import { Modals, openModal } from "@utils/modal";
 import definePlugin from "@utils/types";
@@ -14,15 +15,19 @@ import { ChannelStore, FluxDispatcher, GuildMemberStore, Menu, React, Relationsh
 
 const DS_KEY = "FakeFriends_state";
 
-// fakeState is in memory only — does NOT persist across restarts
 const fakeState = new Map<string, "pending" | "accepted">();
 
 async function persistState() {
-    // No persistence — fakeState reset on restart intentionally
+    await DataStore.set(DS_KEY, Object.fromEntries(fakeState));
 }
 
 async function loadState() {
-    // No loading at startup — fakeState starts empty
+    const saved = await DataStore.get<Record<string, "pending" | "accepted">>(DS_KEY);
+    if (saved && typeof saved === "object") {
+        for (const [id, state] of Object.entries(saved)) {
+            fakeState.set(id, state);
+        }
+    }
 }
 
 const FAKE_DM_PHRASES = [

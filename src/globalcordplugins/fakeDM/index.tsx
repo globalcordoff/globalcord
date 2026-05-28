@@ -7,6 +7,7 @@
 import "./styles.css";
 
 import { ChatBarButton, ChatBarButtonFactory } from "@api/ChatButtons";
+import * as DataStore from "@api/DataStore";
 import { isPanelHidden, addPanelHideListener, removePanelHideListener } from "@globalcordplugins/panelHide";
 import definePlugin from "@utils/types";
 import { findStoreLazy } from "@webpack";
@@ -53,20 +54,19 @@ interface PersistedCall {
 
 type PersistedFake = PersistedMessage | PersistedCall;
 
-function loadPersisted(): PersistedFake[] {
+async function loadPersisted(): Promise<PersistedFake[]> {
     try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        return raw ? JSON.parse(raw) : [];
+        return (await DataStore.get<PersistedFake[]>(STORAGE_KEY)) ?? [];
     } catch { return []; }
 }
 
-function savePersisted(fakes: PersistedFake[]) {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(fakes)); } catch { }
+async function savePersisted(fakes: PersistedFake[]) {
+    try { await DataStore.set(STORAGE_KEY, fakes); } catch { }
 }
 
-function removePersisted(channelId: string, ids: Set<string>) {
-    const fakes = loadPersisted().filter(f => !(f.channelId === channelId && ids.has(f.snowflakeId)));
-    savePersisted(fakes);
+async function removePersisted(channelId: string, ids: Set<string>) {
+    const fakes = (await loadPersisted()).filter(f => !(f.channelId === channelId && ids.has(f.snowflakeId)));
+    await savePersisted(fakes);
 }
 
 // ─── Fake message ID storage ───────────────────────────────────────────────
@@ -85,7 +85,7 @@ function clearFakes(channelId: string): number {
         FluxDispatcher.dispatch({ type: "MESSAGE_DELETE", channelId, id, mlDeleted: true });
         n++;
     }
-    removePersisted(channelId, ids);
+    void removePersisted(channelId, ids);
     ids.clear();
     return n;
 }
@@ -189,18 +189,18 @@ function inject(channelId: string, author: any, content: string, date: Date, per
     });
     registerFake(channelId, id);
 
-    // Persist only new injections (not restores)
     if (!persistedId) {
-        const fakes = loadPersisted();
-        fakes.push({
-            type: "message",
-            channelId,
-            authorId: author.id,
-            content,
-            timestamp: actualDate.toISOString(),
-            snowflakeId: id,
+        void loadPersisted().then(fakes => {
+            fakes.push({
+                type: "message",
+                channelId,
+                authorId: author.id,
+                content,
+                timestamp: actualDate.toISOString(),
+                snowflakeId: id,
+            });
+            return savePersisted(fakes);
         });
-        savePersisted(fakes);
     }
 }
 
@@ -251,19 +251,20 @@ function injectCall(
     registerFake(channelId, id);
 
     if (!persistedId) {
-        const fakes = loadPersisted();
-        fakes.push({
-            type: "call",
-            channelId,
-            callerId: caller.id,
-            otherId: other.id,
-            missed,
-            durationSec,
-            timestamp: actualDate.toISOString(),
-            endedTimestamp: endedDate.toISOString(),
-            snowflakeId: id,
+        void loadPersisted().then(fakes => {
+            fakes.push({
+                type: "call",
+                channelId,
+                callerId: caller.id,
+                otherId: other.id,
+                missed,
+                durationSec,
+                timestamp: actualDate.toISOString(),
+                endedTimestamp: endedDate.toISOString(),
+                snowflakeId: id,
+            });
+            return savePersisted(fakes);
         });
-        savePersisted(fakes);
     }
 }
 
@@ -279,8 +280,8 @@ function scheduleRestore() {
     FluxDispatcher.subscribe("CONNECTION_OPEN", _restoreHandler);
 }
 
-function doRestore() {
-    const fakes = loadPersisted();
+async function doRestore() {
+    const fakes = await loadPersisted();
     if (!fakes.length) return;
 
     for (const f of fakes) {
