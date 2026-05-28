@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Globalcord Installer</title>
+  <style>
+    :root {
+      --bg: #f7f7fb;
+      --panel: #ffffff;
+      --panel-soft: #f1eff8;
+      --border: #dedbea;
+      --text: #171421;
+      --muted: #6f687f;
+      --accent: #8a3ffc;
+      --accent-hover: #7434dd;
+      --success: #16834a;
+      --danger: #c93434;
+      --warn: #a86600;
+      --shadow: 0 18px 46px rgba(33, 28, 54, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      height: 100vh;
+      overflow: hidden;
+      font-family: "Segoe UI", Inter, system-ui, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      user-select: none;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    .shell {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: linear-gradient(180deg, #ffffff 0%, #f7f7fb 100%);
+    }
+
+    .titlebar {
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px 0 18px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.95);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo {
+      width: 30px;
+      height: 30px;
+      object-fit: contain;
+      image-rendering: pixelated;
+    }
+
+    .title {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text);
+    }
+
+    .version {
+      min-width: 52px;
+      padding: 3px 8px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: var(--panel-soft);
+      color: var(--accent);
+      font-size: 11px;
+      font-weight: 700;
+      text-align: center;
+      opacity: 0;
+    }
+
+    .version.loaded { opacity: 1; }
+
+    .title-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .icon-button,
+    .window-button {
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--muted);
+      border-radius: 7px;
+      cursor: pointer;
+    }
+
+    .icon-button {
+      width: 32px;
+      height: 30px;
+      display: grid;
+      place-items: center;
+    }
+
+    .window-button {
+      width: 30px;
+      height: 24px;
+      position: relative;
+    }
+
+    .icon-button:hover,
+    .window-button:hover {
+      background: var(--panel-soft);
+      border-color: var(--border);
+      color: var(--accent);
+    }
+
+    .minimize::before {
+      content: "";
+      position: absolute;
+      left: 9px;
+      right: 9px;
+      top: 12px;
+      height: 2px;
+      background: currentColor;
+      border-radius: 2px;
+    }
+
+    .close::before,
+    .close::after {
+      content: "";
+      position: absolute;
+      left: 8px;
+      right: 8px;
+      top: 11px;
+      height: 2px;
+      background: currentColor;
+      border-radius: 2px;
+    }
+
+    .close::before { transform: rotate(45deg); }
+    .close::after { transform: rotate(-45deg); }
+    .close:hover { color: var(--danger); }
+
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+      padding: 30px 38px 24px;
+      min-height: 0;
+    }
+
+    .hero {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 34px;
+      line-height: 1;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin: 9px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .hero-logo {
+      width: 86px;
+      height: 86px;
+      object-fit: contain;
+      image-rendering: pixelated;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .section-label {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .manual-toggle,
+    .manual-submit {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--panel);
+      color: var(--accent);
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 8px 12px;
+    }
+
+    .manual-toggle:hover,
+    .manual-submit:hover {
+      background: var(--panel-soft);
+    }
+
+    .manual-row {
+      display: none;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .manual-row.visible { display: flex; }
+
+    .manual-row input {
+      flex: 1;
+      min-width: 0;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--panel);
+      color: var(--text);
+      outline: none;
+      padding: 10px 12px;
+      font-size: 12px;
+    }
+
+    .manual-row input:focus {
+      border-color: rgba(138, 63, 252, 0.55);
+    }
+
+    .list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 276px;
+      overflow: auto;
+      padding-right: 4px;
+    }
+
+    .list::-webkit-scrollbar { width: 6px; }
+    .list::-webkit-scrollbar-thumb {
+      background: #cfc9de;
+      border-radius: 999px;
+    }
+
+    .target {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 13px 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--panel);
+      cursor: pointer;
+    }
+
+    .target:hover,
+    .target.selected {
+      border-color: rgba(138, 63, 252, 0.58);
+      background: #fbfaff;
+    }
+
+    .target-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .app-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 9px;
+      display: grid;
+      place-items: center;
+      background: #5865f2;
+      color: #fff;
+      font-weight: 800;
+      flex: 0 0 auto;
+    }
+
+    .app-icon.canary { background: #f0b232; }
+    .app-icon.manual { background: var(--accent); }
+
+    .target h3 {
+      margin: 0;
+      font-size: 13px;
+    }
+
+    .path {
+      margin-top: 3px;
+      color: var(--muted);
+      font-family: Consolas, "JetBrains Mono", monospace;
+      font-size: 10px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 390px;
+    }
+
+    .target-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 0 0 auto;
+    }
+
+    .badge {
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: var(--panel-soft);
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .badge.ok {
+      background: #e8f6ee;
+      color: var(--success);
+    }
+
+    .badge.warn {
+      background: #fff3da;
+      color: var(--warn);
+    }
+
+    .radio {
+      width: 16px;
+      height: 16px;
+      border: 2px solid #c7c1d8;
+      border-radius: 50%;
+    }
+
+    .selected .radio {
+      border-color: var(--accent);
+      background: radial-gradient(circle at center, var(--accent) 0 45%, transparent 48%);
+    }
+
+    .empty {
+      padding: 24px;
+      border: 1px dashed var(--border);
+      border-radius: 8px;
+      color: var(--muted);
+      background: rgba(255, 255, 255, 0.62);
+      text-align: center;
+      font-size: 13px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      margin-top: auto;
+    }
+
+    .primary,
+    .secondary {
+      flex: 1;
+      min-height: 44px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 800;
+      border: 1px solid transparent;
+    }
+
+    .primary {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .primary:hover:not(:disabled) { background: var(--accent-hover); }
+
+    .secondary {
+      background: #fff7f7;
+      border-color: #f0c2c2;
+      color: var(--danger);
+    }
+
+    .secondary:hover:not(:disabled) { background: #ffeded; }
+
+    button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .status {
+      height: 44px;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 0 38px;
+      border-top: 1px solid var(--border);
+      background: #fff;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--muted);
+    }
+
+    .dot.loading { background: var(--accent); }
+    .dot.success { background: var(--success); }
+    .dot.error { background: var(--danger); }
+
+    .overlay {
+      position: fixed;
+      inset: 48px 0 44px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(247, 247, 251, 0.78);
+      z-index: 20;
+    }
+
+    .overlay.visible { display: flex; }
+
+    .modal {
+      width: min(440px, calc(100% - 56px));
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: #fff;
+      box-shadow: var(--shadow);
+      padding: 22px;
+    }
+
+    .modal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 14px;
+    }
+
+    .modal h2 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .modal p {
+      margin: 0 0 16px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .link-grid {
+      display: grid;
+      gap: 8px;
+    }
+
+    .link-button {
+      width: 100%;
+      text-align: left;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--text);
+      cursor: pointer;
+      font-weight: 700;
+      padding: 11px 12px;
+    }
+
+    .link-button:hover {
+      border-color: rgba(138, 63, 252, 0.45);
+      background: var(--panel-soft);
+    }
+
+    .progress-label {
+      display: block;
+      margin-bottom: 12px;
+      font-weight: 800;
+    }
+
+    .progress-row {
+      display: flex;
+      justify-content: space-between;
+      color: var(--muted);
+      font-family: Consolas, monospace;
+      font-size: 11px;
+      margin-bottom: 8px;
+    }
+
+    .bar {
+      height: 8px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: var(--panel-soft);
+    }
+
+    .bar-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--accent);
+      border-radius: inherit;
+      transition: width 0.25s ease;
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="titlebar">
+      <div class="brand">
+        <img class="logo" src="{{ICON_BASE64}}" alt="">
+        <span class="title">Globalcord Installer</span>
+        <span class="version" id="version">...</span>
+      </div>
+      <div class="title-actions">
+        <button class="icon-button" onclick="toggleSettings()" title="Links">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15 1.65 1.65 0 0 0 3.09 14H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09A1.65 1.65 0 0 0 15 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.4.4.94.6 1.51.6H21a2 2 0 0 1 0 4h-.09c-.57 0-1.11.2-1.51.6z"></path>
+          </svg>
+        </button>
+        <button class="window-button minimize" onclick="window.globalcord.minimizeApp()" title="Minimize"></button>
+        <button class="window-button close" onclick="window.globalcord.closeApp()" title="Close"></button>
+      </div>
+    </div>
+
+    <main>
+      <section class="hero">
+        <div>
+          <h1>Globalcord</h1>
+          <p class="subtitle">Select the Discord installation where Globalcord should be installed.</p>
+        </div>
+        <img class="hero-logo" src="{{ICON_BASE64}}" alt="">
+      </section>
+
+      <section>
+        <div class="section-head">
+          <div class="section-label">Discord installations</div>
+          <button class="manual-toggle" onclick="toggleManual()">Manual path</button>
+        </div>
+        <div class="manual-row" id="manual-row">
+          <input id="manual-path" type="text" placeholder="C:\Users\You\AppData\Local\Discord\app-1.0.9171\resources">
+          <button class="manual-submit" onclick="addManualPath()">Add</button>
+        </div>
+        <div class="list" id="discord-list">
+          <div class="empty">Searching for Discord installations...</div>
+        </div>
+      </section>
+
+      <div class="actions">
+        <button class="primary" id="btn-inject" disabled onclick="handleInject()">Install Globalcord</button>
+        <button class="secondary" id="btn-uninject" disabled onclick="handleUninject()">Uninstall</button>
+      </div>
+    </main>
+
+    <div class="status">
+      <span class="dot" id="status-dot"></span>
+      <span id="status-text">Waiting for selection...</span>
+    </div>
+  </div>
+
+  <div class="overlay" id="progress-overlay">
+    <div class="modal">
+      <span class="progress-label" id="progress-label">Preparing installation...</span>
+      <div class="progress-row">
+        <span id="progress-mb"></span>
+        <span id="progress-pct">0%</span>
+      </div>
+      <div class="bar">
+        <div class="bar-fill" id="progress-fill"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="settings-overlay" onclick="closeSettings(event)">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-head">
+        <h2>Globalcord links</h2>
+        <button class="icon-button" onclick="toggleSettings()" title="Close">x</button>
+      </div>
+      <p>Open official project links and community resources.</p>
+      <div class="link-grid">
+        <button class="link-button" onclick="window.globalcord.openUrl('https://discord.gg/globalcord')">Discord server</button>
+        <button class="link-button" onclick="window.globalcord.openUrl('https://globalcord.online')">Website</button>
+        <button class="link-button" onclick="window.globalcord.openUrl('https://github.com/globalcordoff/globalcord')">GitHub repository</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const icons = {
+      "Discord": "D",
+      "Discord PTB": "PTB",
+      "Discord Canary": "C",
+      "Discord Dev": "DEV",
+      "Manual": "M"
+    };
+    let discords = [];
+    let selected = null;
+
+    function setStatus(type, text) {
+      document.getElementById("status-dot").className = `dot ${type}`;
+      document.getElementById("status-text").textContent = text;
+    }
+
+    function setLoading(visible, text = "Loading...", percent = 100, mbDownloaded = null, mbTotal = null) {
+      document.getElementById("progress-overlay").classList.toggle("visible", visible);
+      if (!visible) {
+        setTimeout(() => document.getElementById("progress-fill").style.width = "0%", 250);
+        return;
+      }
+
+      const pct = Math.max(0, Math.min(100, Math.round(percent)));
+      document.getElementById("progress-label").textContent = text;
+      document.getElementById("progress-pct").textContent = `${pct}%`;
+      document.getElementById("progress-fill").style.width = `${pct}%`;
+      document.getElementById("progress-mb").textContent =
+        mbDownloaded !== null && mbTotal !== null ? `${mbDownloaded.toFixed(1)} / ${mbTotal.toFixed(1)} MB` : "";
+    }
+
+    function toggleManual() {
+      const row = document.getElementById("manual-row");
+      row.classList.toggle("visible");
+      if (row.classList.contains("visible")) document.getElementById("manual-path").focus();
+    }
+
+    async function addManualPath() {
+      const input = document.getElementById("manual-path");
+      const path = input.value.trim();
+      if (!path) return;
+
+      const entry = { name: "Manual", path, asarPath: `${path}\\app.asar`, version: "custom" };
+      discords.push(entry);
+      await renderList();
+      selectDiscord(discords.length - 1);
+      input.value = "";
+      document.getElementById("manual-row").classList.remove("visible");
+    }
+
+    async function loadDiscords() {
+      setStatus("loading", "Detecting Discord installations...");
+      try {
+        discords = await window.globalcord.detectDiscord() || [];
+      } catch {
+        discords = [];
+      }
+
+      await renderList();
+      setStatus(discords.length ? "idle" : "error", discords.length ? "Select an installation target." : "No installations found. Use manual path.");
+    }
+
+    async function renderList() {
+      const list = document.getElementById("discord-list");
+      list.innerHTML = "";
+
+      if (!discords.length) {
+        list.innerHTML = '<div class="empty">No Discord installations were found automatically. Add the resources folder manually.</div>';
+        return;
+      }
+
+      for (let i = 0; i < discords.length; i++) {
+        const d = discords[i];
+        let injected = false;
+        let thirdParty = false;
+
+        try { injected = await window.globalcord.isInjected(d.path); } catch {}
+        if (!injected) {
+          try { thirdParty = await window.globalcord.hasThirdPartyMod(d.path); } catch {}
+        }
+
+        const item = document.createElement("div");
+        item.className = "target";
+        item.dataset.index = i;
+        item.dataset.thirdParty = thirdParty ? "1" : "0";
+        const badge = injected
+          ? '<span class="badge ok">installed</span>'
+          : thirdParty
+            ? '<span class="badge warn">mod found</span>'
+            : '<span class="badge">clean</span>';
+        const iconClass = d.name.includes("Canary") ? "canary" : d.name === "Manual" ? "manual" : "";
+
+        item.innerHTML = `
+          <div class="target-left">
+            <div class="app-icon ${iconClass}">${icons[d.name] || "D"}</div>
+            <div>
+              <h3>${escapeHtml(d.name)}</h3>
+              <div class="path">${escapeHtml(d.path)}</div>
+            </div>
+          </div>
+          <div class="target-right">
+            <span class="badge">v${escapeHtml(d.version || "?")}</span>
+            ${badge}
+            <span class="radio"></span>
+          </div>
+        `;
+        item.addEventListener("click", () => selectDiscord(i));
+        list.appendChild(item);
+      }
+    }
+
+    function selectDiscord(index) {
+      selected = discords[index];
+      document.querySelectorAll(".target").forEach((node, i) => node.classList.toggle("selected", i === index));
+      document.getElementById("btn-inject").disabled = false;
+      document.getElementById("btn-uninject").disabled = false;
+
+      const isThirdParty = document.querySelectorAll(".target")[index]?.dataset.thirdParty === "1";
+      document.getElementById("btn-inject").textContent = isThirdParty ? "Replace with Globalcord" : "Install Globalcord";
+      setStatus(isThirdParty ? "loading" : "idle", isThirdParty
+        ? `${selected.name}: another mod was detected. Installing will replace it.`
+        : `Selected: ${selected.name}`);
+    }
+
+    async function handleInject() {
+      if (!selected) return;
+      setLoading(true, "Starting installation...", 2);
+      setStatus("loading", `Installing into ${selected.name}...`);
+
+      const started = window.globalcord.startInject(selected.path);
+      if (!started?.started) {
+        setLoading(false);
+        setStatus("error", started?.error || "Could not start installation.");
+        return;
+      }
+
+      const result = await waitForInject();
+      if (!result.success) {
+        setLoading(false);
+        setStatus("error", result.error || "Installation failed.");
+        return;
+      }
+
+      setLoading(true, "Finalizing installation...", 100);
+      setTimeout(async () => {
+        setLoading(false);
+        setStatus("success", `Globalcord installed into ${selected.name}. Restart Discord.`);
+        await loadDiscords();
+      }, 600);
+    }
+
+    function waitForInject() {
+      return new Promise(resolve => {
+        const timer = setInterval(() => {
+          const status = window.globalcord.getInjectStatus();
+          if (status.state === "done") {
+            clearInterval(timer);
+            resolve({ success: true });
+          }
+          if (status.state === "error") {
+            clearInterval(timer);
+            resolve({ success: false, error: status.error });
+          }
+        }, 500);
+      });
+    }
+
+    async function handleUninject() {
+      if (!selected) return;
+      setLoading(true, "Preparing uninstall...", 5);
+      setStatus("loading", `Uninstalling from ${selected.name}...`);
+
+      const result = await window.globalcord.uninject(selected.path);
+      if (!result.success) {
+        setLoading(false);
+        setStatus("error", result.error || "Uninstall failed.");
+        return;
+      }
+
+      setLoading(true, "Done", 100);
+      setTimeout(async () => {
+        setLoading(false);
+        setStatus("success", `Globalcord removed from ${selected.name}.`);
+        await loadDiscords();
+      }, 600);
+    }
+
+    function toggleSettings() {
+      document.getElementById("settings-overlay").classList.toggle("visible");
+    }
+
+    function closeSettings(event) {
+      event.currentTarget.classList.remove("visible");
+    }
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, char => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        "\"": "&quot;",
+        "'": "&#039;"
+      }[char]));
+    }
+
+    async function loadLatestVersion() {
+      try {
+        const res = await fetch("https://api.github.com/repos/globalcordoff/globalcord/releases/latest", {
+          headers: { "Accept": "application/vnd.github.v3+json" }
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!data.tag_name) return;
+        const version = document.getElementById("version");
+        version.textContent = data.tag_name;
+        version.classList.add("loaded");
+      } catch {}
+    }
+
+    loadDiscords();
+    loadLatestVersion();
+  </script>
+</body>
+</html>

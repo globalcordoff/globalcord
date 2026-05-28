@@ -1,0 +1,16 @@
+/* Stealth Mode - hide Globalcord plugin UI (but NOT settings access) */
+
+/* Plugin buttons: header bar, channel toolbar, chat bar, user area */
+body.globalcord-stealth .vc-header-bar-btns,
+body.globalcord-stealth .vc-channel-toolbar-btns,
+body.globalcord-stealth .vc-chat-bar-btns,
+body.globalcord-stealth .vc-user-area-btns,
+
+/* Titlebar injected elements */
+body.globalcord-stealth #globalcord-titlebar-btn,
+body.globalcord-stealth #globalcord-titlebar-link-style,
+
+/* GlobalcordAI nav button */
+body.globalcord-stealth .nai-nav-item {
+    display: none !important;
+}
