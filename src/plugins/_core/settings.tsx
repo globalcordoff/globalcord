@@ -6,6 +6,7 @@
 
 import { definePluginSettings } from "@api/Settings";
 import { BackupRestoreIcon, LogIcon, MagnifyingGlassIcon,MainSettingsIcon, PaintbrushIcon, PatchHelperIcon, PluginsIcon, UpdaterIcon } from "@components/Icons";
+import { isPanelHidden } from "@globalcordplugins/panelHide";
 import {
     BackupAndRestoreTab,
     ChangelogTab,
@@ -287,10 +288,12 @@ export default definePlugin({
             type: LayoutTypes.SECTION,
             useTitle: () => {
                 try { if (localStorage.getItem("Globalcord_stealthMode") === "1") return ""; } catch { }
+                try { if (isPanelHidden()) return ""; } catch { }
                 return "Globalcord Settings";
             },
             buildLayout: () => {
                 try { if (localStorage.getItem("Globalcord_stealthMode") === "1") return [mainEntry]; } catch { }
+                try { if (isPanelHidden()) return []; } catch { }
                 return fullEntries;
             }
         };

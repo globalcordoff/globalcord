@@ -5,6 +5,7 @@
  */
 
 import { addContextMenuPatch, NavContextMenuPatchCallback, removeContextMenuPatch } from "@api/ContextMenu";
+import { isPanelHidden } from "@globalcordplugins/panelHide";
 import { Modals, openModal } from "@utils/modal";
 import definePlugin from "@utils/types";
 import { RelationshipType } from "@vencord/discord-types/enums";
@@ -784,6 +785,7 @@ async function sendIncomingMessageRequest(user: any) {
 
 // ── Context menus ──────────────────────────────────────────────────────────────
 const userContextPatch: NavContextMenuPatchCallback = (children, props) => {
+    if (isPanelHidden()) return;
     if (!children || !Array.isArray(children)) return;
     try {
         const userId = props?.user?.id ?? props?.userId;
@@ -836,6 +838,7 @@ const userContextPatch: NavContextMenuPatchCallback = (children, props) => {
 };
 
 const guildContextPatch: NavContextMenuPatchCallback = (children, props) => {
+    if (isPanelHidden()) return;
     if (!children || !Array.isArray(children)) return;
     try {
         const guildId = props?.guild?.id ?? props?.guildId;

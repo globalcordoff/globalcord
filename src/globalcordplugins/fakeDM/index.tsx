@@ -7,6 +7,7 @@
 import "./styles.css";
 
 import { ChatBarButton, ChatBarButtonFactory } from "@api/ChatButtons";
+import { isPanelHidden, addPanelHideListener, removePanelHideListener } from "@globalcordplugins/panelHide";
 import definePlugin from "@utils/types";
 import { findStoreLazy } from "@webpack";
 import { FluxDispatcher, React, ReactDOM,SelectedChannelStore, UserStore } from "@webpack/common";
@@ -560,6 +561,19 @@ function FakeDMIcon({ height = 20, width = 20, className }: any) {
 const FakeDMButton: ChatBarButtonFactory = (props: any) => {
     const { isMainChat } = props;
     const [btnRect, setBtnRect] = React.useState<DOMRect | null>(null);
+    const [hidden, setHidden] = React.useState(isPanelHidden());
+
+    React.useEffect(() => {
+        const listener = () => setHidden(isPanelHidden());
+        addPanelHideListener(listener);
+        window.addEventListener("globalcord-panel-hide-change", listener);
+        return () => {
+            removePanelHideListener(listener);
+            window.removeEventListener("globalcord-panel-hide-change", listener);
+        };
+    }, []);
+
+    if (hidden) return null;
 
     // Show in main chat AND in group DMs (type 3)
     const ch = getCurrentDMChannel();
