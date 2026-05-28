@@ -613,12 +613,27 @@ export default definePlugin({
                     if (data.pronouns) patched.pronouns = data.pronouns;
                     if (data.accentColor != null) patched.accentColor = data.accentColor;
                     if (data.banner) patched.banner = data.banner;
+                    // Override flags so Discord recalculates badges from our fake publicFlags
+                    if (data.badgeFlags != null) {
+                        patched.publicFlags = data.badgeFlags;
+                        patched.badges = []; // force Discord to rebuild badge list
+                    }
                     if (data.nitro) {
                         patched.premiumType = 2;
                         const LEVEL_MONTHS = [1, 2, 3, 6, 12, 24, 36, 72];
                         const since = new Date();
                         since.setMonth(since.getMonth() - (LEVEL_MONTHS[data.nitroLevel ?? 0] ?? 1));
                         patched.premiumSince = since;
+                        if ((data.boostMonths ?? -1) >= 0) {
+                            const BOOST_M = [1, 2, 3, 6, 9, 12, 15, 18, 24];
+                            const bSince = new Date();
+                            bSince.setMonth(bSince.getMonth() - (BOOST_M[data.boostMonths!] ?? 1));
+                            patched.premiumGuildSince = bSince;
+                        }
+                    } else {
+                        patched.premiumType = 0;
+                        patched.premiumSince = null;
+                        patched.premiumGuildSince = null;
                     }
                     return patched;
                 };
@@ -702,7 +717,8 @@ export default definePlugin({
                     badges.push({ description: tooltip, image: OLD_NAME_BADGE_ICON, key: "fcp-oldname", props: { style } });
                 }
 
-                return badges.length > 0 ? badges : (nativeBadges || []);
+                // Always return our badges — empty array removes native ones too
+                return badges;
             }
         }
     ],

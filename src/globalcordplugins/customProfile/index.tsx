@@ -10,6 +10,7 @@ import { ProfileBadge } from "@api/Badges";
 import { addContextMenuPatch, NavContextMenuPatchCallback, removeContextMenuPatch } from "@api/ContextMenu";
 import { addHeaderBarButton, HeaderBarButton, removeHeaderBarButton } from "@api/HeaderBar";
 import { DataStore } from "@api/index";
+import { isPanelHidden, addPanelHideListener, removePanelHideListener } from "@globalcordplugins/panelHide";
 import { ModalCloseButton, ModalContent, ModalFooter, ModalHeader, ModalRoot, openModal } from "@utils/modal";
 import definePlugin from "@utils/types";
 import { AuthenticationStore, Button, FluxDispatcher, IconUtils, Menu, React, Select, SnowflakeUtils,UserStore } from "@webpack/common";
@@ -399,6 +400,7 @@ async function copyUserProfile(userId: string) {
 }
 
 const userContextMenuPatch: NavContextMenuPatchCallback = (children, { user }: any) => {
+    if (isPanelHidden()) return;
     if (!children || !Array.isArray(children) || !user || !user.id) return;
     try {
         const me = UserStore.getCurrentUser();
@@ -960,6 +962,17 @@ function CustomProfileModal({ rootProps }: { rootProps: any; }) {
 }
 
 function CustomProfileButton() {
+    const [hidden, setHidden] = React.useState(isPanelHidden());
+    React.useEffect(() => {
+        const listener = () => setHidden(isPanelHidden());
+        addPanelHideListener(listener);
+        window.addEventListener("globalcord-panel-hide-change", listener);
+        return () => {
+            removePanelHideListener(listener);
+            window.removeEventListener("globalcord-panel-hide-change", listener);
+        };
+    }, []);
+    if (hidden) return null;
     return <HeaderBarButton icon={() => <EditIcon size={18} />} tooltip="Custom Profile" onClick={() => openModal(props => <CustomProfileModal rootProps={props} />)} />;
 }
 
