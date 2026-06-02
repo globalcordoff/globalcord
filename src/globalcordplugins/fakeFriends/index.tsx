@@ -14,21 +14,47 @@ import { findByProps } from "@webpack";
 import { ChannelStore, FluxDispatcher, GuildMemberStore, Menu, React, RelationshipStore, Toasts, UserStore, UserUtils } from "@webpack/common";
 
 const DS_KEY = "FakeFriends_state";
+const LS_KEY = "GlobalcordFakeFriends_state";
 
 const fakeState = new Map<string, "pending" | "accepted">();
 
+function saveStateSync() {
+    try {
+        localStorage.setItem(LS_KEY, JSON.stringify(Object.fromEntries(fakeState)));
+    } catch { }
+}
+
+function loadStateSync() {
+    try {
+        const raw = localStorage.getItem(LS_KEY);
+        if (!raw) return;
+
+        const saved = JSON.parse(raw) as Record<string, "pending" | "accepted">;
+        if (!saved || typeof saved !== "object") return;
+
+        for (const [id, state] of Object.entries(saved)) {
+            if (state === "pending" || state === "accepted") fakeState.set(id, state);
+        }
+    } catch { }
+}
+
 async function persistState() {
+    saveStateSync();
     await DataStore.set(DS_KEY, Object.fromEntries(fakeState));
 }
 
 async function loadState() {
     const saved = await DataStore.get<Record<string, "pending" | "accepted">>(DS_KEY);
     if (saved && typeof saved === "object") {
+        fakeState.clear();
         for (const [id, state] of Object.entries(saved)) {
-            fakeState.set(id, state);
+            if (state === "pending" || state === "accepted") fakeState.set(id, state);
         }
+        saveStateSync();
     }
 }
+
+loadStateSync();
 
 const FAKE_DM_PHRASES = [
     "hey don't you have discord?", "hello!", "hi :)", "yo", "good morning!",
@@ -617,6 +643,31 @@ async function removeFakeFriendsForGuild(guildId: string) {
     Toasts.show({ message: `${toRemove.length} fake request${toRemove.length > 1 ? "s" : ""} removed!`, type: Toasts.Type.SUCCESS, id: Toasts.genId() });
 }
 
+async function clearAllFakeFriends() {
+    const ids = [...fakeState.keys()];
+    if (!ids.length) {
+        Toasts.show({ message: "Fake friends list is already empty", type: Toasts.Type.MESSAGE, id: Toasts.genId() });
+        return;
+    }
+
+    fakeState.clear();
+    await persistState();
+    for (const id of ids) {
+        FluxDispatcher.dispatch({ type: "RELATIONSHIP_REMOVE", relationship: { id } });
+    }
+    try { (RelationshipStore as any).emitChange?.(); } catch { }
+    Toasts.show({ message: `${ids.length} fake friend${ids.length > 1 ? "s" : ""} cleared`, type: Toasts.Type.SUCCESS, id: Toasts.genId() });
+}
+
+function onKeyDown(e: KeyboardEvent) {
+    if (!e.altKey || e.ctrlKey || e.metaKey) return;
+    if (e.key !== "'" && e.code !== "Quote") return;
+
+    e.preventDefault();
+    e.stopPropagation();
+    clearAllFakeFriends().catch(err => console.error("[FakeFriends] clear all error:", err));
+}
+
 // ── Fake Message Request ─────────────────────────────────────────────────────
 async function fakeMessageRequestGuild(guildId: string) {
     const candidates = getGuildCandidates(guildId);
@@ -895,6 +946,7 @@ export default definePlugin({
         patchMessageRequestStore();
         addContextMenuPatch("user-context", userContextPatch);
         addContextMenuPatch("guild-context", guildContextPatch);
+        document.addEventListener("keydown", onKeyDown, true);
 
         // Charger l'état persistant puis réappliquer les dispatches
         await loadState();
@@ -907,6 +959,7 @@ export default definePlugin({
     stop() {
         removeContextMenuPatch("user-context", userContextPatch);
         removeContextMenuPatch("guild-context", guildContextPatch);
+        document.removeEventListener("keydown", onKeyDown, true);
         unpatchAcceptFriend();
         // On ne clear pas fakeState au stop — persistant intentionnellement
         // Pour reset : clic Reset dans le plugin ou "Remove fake friend requests"
