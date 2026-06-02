@@ -10,7 +10,7 @@ import { ProfileBadge } from "@api/Badges";
 import { addContextMenuPatch, NavContextMenuPatchCallback, removeContextMenuPatch } from "@api/ContextMenu";
 import { addHeaderBarButton, HeaderBarButton, removeHeaderBarButton } from "@api/HeaderBar";
 import { DataStore } from "@api/index";
-import { isPanelHidden, addPanelHideListener, removePanelHideListener } from "@globalcordplugins/panelHide";
+import { addPanelHideListener, isPanelHidden, removePanelHideListener } from "@globalcordplugins/panelHide";
 import { ModalCloseButton, ModalContent, ModalFooter, ModalHeader, ModalRoot, openModal } from "@utils/modal";
 import definePlugin from "@utils/types";
 import { AuthenticationStore, Button, FluxDispatcher, IconUtils, Menu, React, Select, SnowflakeUtils,UserStore } from "@webpack/common";
@@ -168,6 +168,12 @@ function saveAllDataSync() {
     } catch { }
 }
 
+function invalidateProfileCache() {
+    cachedFakeUser = null;
+    cachedOriginalUser = null;
+    _dataVersion++;
+}
+
 function syncCurrentUserData() {
     const myId = _cachedMyId || AuthenticationStore?.getId?.();
     if (myId) {
@@ -275,6 +281,7 @@ async function loadData() {
             allAccountsData = allData;
             allAccountsEnabled = allEnabled || {};
             syncCurrentUserData();
+            invalidateProfileCache();
             saveAllDataSync();
             saveDataSync(storedData, isEnabled);
             return;
@@ -291,6 +298,7 @@ async function loadData() {
             DataStore.set(DS_ALL_ENABLED, allAccountsEnabled).catch(() => { });
             saveAllDataSync();
         }
+        invalidateProfileCache();
         saveDataSync(storedData, isEnabled);
     } catch (err) { }
 }
@@ -389,6 +397,13 @@ async function copyUserProfile(userId: string) {
         newData.copiedUserId = userId;
         storedData = newData;
         isEnabled = true;
+        const myId = AuthenticationStore?.getId?.();
+        if (myId) {
+            allAccountsData[myId] = newData;
+            allAccountsEnabled[myId] = true;
+            saveAllDataSync();
+        }
+        invalidateProfileCache();
         saveDataSync(newData, true);
         DataStore.set(DS_ALL_DATA, allAccountsData).catch(() => { });
         DataStore.set(DS_ALL_ENABLED, allAccountsEnabled).catch(() => { });
@@ -424,10 +439,8 @@ const userContextMenuPatch: NavContextMenuPatchCallback = (children, { user }: a
                                 storedData = {};
                                 isEnabled = false;
                                 saveDataSync({}, false);
-                                cachedFakeUser = null;
-                                cachedOriginalUser = null;
                                 _trueOriginalUser = null;
-                                _dataVersion++;
+                                invalidateProfileCache();
                                 saveAllDataSync();
                                 DataStore.set(DS_ALL_DATA, allAccountsData).catch(() => { });
                                 DataStore.set(DS_ALL_ENABLED, allAccountsEnabled).catch(() => { });
@@ -798,9 +811,7 @@ function CustomProfileModal({ rootProps }: { rootProps: any; }) {
                 storedData = savedData;
                 isEnabled = true;
                 saveDataSync(storedData, true);
-                cachedFakeUser = null;
-                cachedOriginalUser = null;
-                _dataVersion++;
+                invalidateProfileCache();
             }
 
             // Save all in localStorage + IndexedDB
@@ -826,10 +837,8 @@ function CustomProfileModal({ rootProps }: { rootProps: any; }) {
             storedData = {};
             isEnabled = false;
             saveDataSync({}, false);
-            cachedFakeUser = null;
-            cachedOriginalUser = null;
             _trueOriginalUser = null;
-            _dataVersion++;
+            invalidateProfileCache();
         }
 
         saveAllDataSync();
