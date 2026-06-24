@@ -184,6 +184,7 @@ const sessions = new Map();
 const audioPipelines = new Map();
 const sharedAudios = new Map();
 const streamJobs = new Map();
+const customProfiles = new Map();
 
 async function preconnectGhost({ userId, token, micLabel, micDevice }) {
     micLabel = micLabel || micDevice || "default";
@@ -689,6 +690,29 @@ http.createServer(async (req, res) => {
     try {
         if (req.url === "/status" && req.method === "GET") {
             send(res, 200, { ok: true, sessions: [...sessions.keys()], pipelines: [...audioPipelines.keys()], ffmpeg: !!findFfmpeg(), dvs: !!DVS, opus: !!OpusScript });
+            return;
+        }
+
+        if (req.url === "/profile" && req.method === "POST") {
+            const body = await readBody(req);
+            if (!body.userId || !body.data) { send(res, 400, { ok: false, error: "Missing userId or data" }); return; }
+            customProfiles.set(body.userId, body.data);
+            send(res, 200, { ok: true });
+            return;
+        }
+
+        if (req.url?.startsWith("/profile/") && req.method === "GET") {
+            const userId = req.url.slice("/profile/".length);
+            const data = customProfiles.get(userId);
+            if (!data) { send(res, 404, { ok: false }); return; }
+            send(res, 200, { ok: true, data });
+            return;
+        }
+
+        if (req.url?.startsWith("/profile/") && req.method === "DELETE") {
+            const userId = req.url.slice("/profile/".length);
+            customProfiles.delete(userId);
+            send(res, 200, { ok: true });
             return;
         }
         if (req.url === "/devices" && req.method === "GET") {

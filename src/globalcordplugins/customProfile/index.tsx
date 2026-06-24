@@ -65,6 +65,109 @@ const NITRO_LEVELS = [
     { label: t("Opale (72 mois)"), icon: "https://cdn.discordapp.com/badge-icons/5b154df19c53dce2af92c9b61e6be5e2.png" },
 ];
 
+interface NitroLevelInfo {
+    title: string;
+    bg: string;
+    border: string;
+    arrowColor: string;
+    icon: string;
+}
+
+function getNitroLevelInfo(level: number, customIconUrl?: string): NitroLevelInfo {
+    const l = Math.max(0, Math.min(level, 8));
+    const levels: Record<number, { title: string; bg: string; border: string; arrowColor: string; defaultIcon: string; }> = {
+        0: {
+            title: "Nitro",
+            bg: "linear-gradient(135deg, #28183d 0%, #5865f2 50%, #160e22 100%)",
+            border: "rgba(147, 115, 238, 0.4)",
+            arrowColor: "#5865f2",
+            defaultIcon: "https://cdn.discordapp.com/badge-icons/2ba85e8026a8614b640c2837bcdfe21b.png"
+        },
+        1: {
+            title: "Nitro Bronze",
+            bg: "linear-gradient(135deg, #30211a 0%, #5a3d2e 50%, #1c110b 100%)",
+            border: "rgba(182, 127, 98, 0.4)",
+            arrowColor: "#5a3d2e",
+            defaultIcon: "https://cdn.discordapp.com/badge-icons/4f33c4a9c64ce221936bd256c356f91f.png"
+        },
+        2: {
+            title: "Nitro Silver",
+            bg: "linear-gradient(135deg, #2b2d31 0%, #4e5058 50%, #1e1f22 100%)",
+            border: "rgba(160, 165, 175, 0.4)",
+            arrowColor: "#4e5058",
+            defaultIcon: "https://cdn.discordapp.com/badge-icons/4514fab914bdbfb4ad2fa23df76121a6.png"
+        },
+        3: {
+            title: "Nitro Gold",
+            bg: "linear-gradient(135deg, #3d3115 0%, #705822 50%, #201808 100%)",
+            border: "rgba(224, 180, 80, 0.4)",
+            arrowColor: "#705822",
+            defaultIcon: "https://cdn.discordapp.com/badge-icons/2895086c18d5531d499862e41d1155a6.png"
+        },
+        4: {
+            title: "Nitro Platinum",
+            bg: "linear-gradient(135deg, #182e35 0%, #2b5d6c 50%, #0d1a1e 100%)",
+            border: "rgba(75, 150, 170, 0.4)",
+            arrowColor: "#2b5d6c",
+            defaultIcon: "https://cdn.discordapp.com/badge-icons/0334688279c8359120922938dcb1d6f8.png"
+        },
+        5: {
+            title: "Nitro Diamond",
+            bg: "linear-gradient(135deg, #271c42 0%, #432a84 50%, #130c22 100%)",
+            border: "rgba(130, 85, 235, 0.45)",
+            arrowColor: "#432a84",
+            defaultIcon: "https://cdn.discordapp.com/badge-icons/0d61871f72bb9a33a7ae568c1fb4f20a.png"
+        },
+        6: {
+            title: "Nitro Emerald",
+            bg: "linear-gradient(135deg, #113017 0%, #145520 50%, #0a1b0e 100%)",
+            border: "rgba(40, 150, 65, 0.45)",
+            arrowColor: "#145520",
+            defaultIcon: "https://cdn.discordapp.com/badge-icons/11e2d339068b55d3a506cff34d3780f3.png"
+        },
+        7: {
+            title: "Nitro Ruby",
+            bg: "linear-gradient(135deg, #3f1619 0%, #5a1420 50%, #1c0b0d 100%)",
+            border: "rgba(220, 40, 70, 0.45)",
+            arrowColor: "#5a1420",
+            defaultIcon: "https://cdn.discordapp.com/badge-icons/cd5e2cfd9d7f27a8cdcd3e8a8d5dc9f4.png"
+        },
+        8: {
+            title: "Nitro Opal",
+            bg: "linear-gradient(135deg, #15323d 0%, #1e2d44 50%, #0d1622 100%)",
+            border: "rgba(65, 140, 200, 0.45)",
+            arrowColor: "#1e2d44",
+            defaultIcon: "https://cdn.discordapp.com/badge-icons/5b154df19c53dce2af92c9b61e6be5e2.png"
+        }
+    };
+    const info = levels[l] || levels[0];
+    return {
+        title: info.title,
+        bg: info.bg,
+        border: info.border,
+        arrowColor: info.arrowColor,
+        icon: customIconUrl || info.defaultIcon
+    };
+}
+
+function NitroTooltip({ level, premiumSince, customIcon }: { level: number; premiumSince?: Date; customIcon?: string; }) {
+    const info = getNitroLevelInfo(level, customIcon);
+    const date = premiumSince || new Date();
+    const dateStr = `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear().toString().slice(-2)}`;
+    return (
+        <div className="gc-nitro-tooltip-card" style={{
+            "--gc-nitro-bg": info.bg,
+            "--gc-nitro-border": info.border,
+            "--gc-nitro-arrow-color": info.arrowColor,
+        } as any}>
+            <img src={info.icon} className="gc-nitro-tooltip-icon" alt={info.title} />
+            <h3 className="gc-nitro-tooltip-title">{info.title}</h3>
+            <p className="gc-nitro-tooltip-subtitle">Subscriber since {dateStr}</p>
+        </div>
+    );
+}
+
+
 const BOOST_LABELS_RAW = [
     "1 Mois", "2 Mois", "3 Mois", "6 Mois",
     "9 Mois", "12 Mois", "15 Mois", "18 Mois", "24 Mois"
@@ -141,6 +244,39 @@ const DS_ALL_DATA = "customProfile_allData";
 const DS_ALL_ENABLED = "customProfile_allEnabled";
 const LS_ALL_DATA = "GlobalcordCP_allData";
 const LS_ALL_ENABLED = "GlobalcordCP_allEnabled";
+const LS_SHARE_LOCAL = "GlobalcordCP_shareLocal";
+
+const GHOST_URL = "http://127.0.0.1:47821";
+
+function publishProfileToGhost(userId: string, data: CustomProfileData) {
+    const shareable = {
+        username: data.username,
+        globalName: data.globalName,
+        avatar: data.avatar,
+        banner: data.banner,
+        bio: data.bio,
+        accentColor: data.accentColor,
+        accentColor2: data.accentColor2,
+        pronouns: data.pronouns,
+        badgeFlags: data.badgeFlags,
+        createdAt: data.createdAt,
+        nitro: data.nitro,
+        nitroLevel: data.nitroLevel,
+        boostMonths: data.boostMonths,
+        customBadgeIds: data.customBadgeIds,
+        oldName: data.oldName,
+        decorationAsset: data.decorationAsset,
+    };
+    fetch(`${GHOST_URL}/profile`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, data: shareable }),
+    }).catch(() => { });
+}
+
+function unpublishProfileFromGhost(userId: string) {
+    fetch(`${GHOST_URL}/profile/${userId}`, { method: "DELETE" }).catch(() => { });
+}
 
 let storedData: CustomProfileData = {};
 let isEnabled = false;
@@ -759,6 +895,7 @@ function CustomProfileModal({ rootProps }: { rootProps: any; }) {
     const [selectedAccountId, setSelectedAccountId] = React.useState(myId);
     const [data, setData] = React.useState<CustomProfileData>(() => ({ ...(allAccountsData[myId] || storedData || {}) }));
     const [saving, setSaving] = React.useState(false);
+    const [shareLocal, setShareLocal] = React.useState(() => localStorage.getItem(LS_SHARE_LOCAL) === "1");
     const nitroLevel = data.nitroLevel ?? -1;
     const boostLevel = data.boostMonths ?? -1;
     const customIds = data.customBadgeIds ?? [];
@@ -802,11 +939,9 @@ function CustomProfileModal({ rootProps }: { rootProps: any; }) {
             setSaving(true);
             const savedData = { ...data };
 
-            // Save in multi-accounts storage
             allAccountsData[selectedAccountId] = savedData;
             allAccountsEnabled[selectedAccountId] = true;
 
-            // If it's the active account, update globals
             if (selectedAccountId === myId) {
                 storedData = savedData;
                 isEnabled = true;
@@ -814,10 +949,13 @@ function CustomProfileModal({ rootProps }: { rootProps: any; }) {
                 invalidateProfileCache();
             }
 
-            // Save all in localStorage + IndexedDB
             saveAllDataSync();
             DataStore.set(DS_ALL_DATA, allAccountsData).catch(() => { });
             DataStore.set(DS_ALL_ENABLED, allAccountsEnabled).catch(() => { });
+
+            localStorage.setItem(LS_SHARE_LOCAL, shareLocal ? "1" : "0");
+            if (shareLocal) publishProfileToGhost(selectedAccountId, savedData);
+            else unpublishProfileFromGhost(selectedAccountId);
 
             updateCachedRealData();
             forceAccountPanelRerender();
@@ -846,6 +984,8 @@ function CustomProfileModal({ rootProps }: { rootProps: any; }) {
         DataStore.set(DS_ALL_ENABLED, allAccountsEnabled).catch(() => { });
         DataStore.set(DS_KEY, {}).catch(() => { });
         DataStore.set(DS_ENABLED, false).catch(() => { });
+
+        unpublishProfileFromGhost(selectedAccountId);
 
         forceAccountPanelRerender();
         rootProps.onClose();
@@ -960,6 +1100,13 @@ function CustomProfileModal({ rootProps }: { rootProps: any; }) {
                     ))}
                 </div>
                 <div className="cp-hint">{t("Visual and local modifications only — persistent between restarts.")}</div>
+                <div className="cp-divider" />
+                <Toggle
+                    label={t("Share profile with other GlobalCord instances on this PC")}
+                    sublabel={t("Other accounts running GlobalCord on this machine will see your custom profile")}
+                    checked={shareLocal}
+                    onChange={v => setShareLocal(v)}
+                />
             </ModalContent>
             <ModalFooter className="cp-footer">
                 <button className="cp-btn cp-btn-ghost" onClick={rootProps.onClose}>{t("Cancel")}</button>
@@ -1191,9 +1338,9 @@ export default definePlugin({
 
         if (isEnabled && storedData.nitro) {
             clone.premiumType = 2;
-            const LEVEL_MONTHS = [1, 2, 3, 6, 12, 24, 36, 72];
+            const LEVEL_MONTHS = [0, 1, 2, 3, 6, 12, 24, 36, 72];
             const since = new Date();
-            since.setMonth(since.getMonth() - (LEVEL_MONTHS[storedData.nitroLevel!] ?? 1));
+            since.setMonth(since.getMonth() - (LEVEL_MONTHS[storedData.nitroLevel!] ?? 0));
             clone.premiumSince = since;
 
             const bm = storedData.boostMonths ?? -1;
@@ -1577,7 +1724,33 @@ export default definePlugin({
 
                 // 3. NITRO (Image 2 shows it here)
                 if (hasNitroFake) {
-                    badgeList.push({ description: "NITRO\nSubscribed since 10/22/21", iconSrc: NITRO_LEVELS[nl].icon, position: 0, props: { style, title: "Nitro" } });
+                    let premiumSince: Date | undefined;
+                    if (storedData.nitro) {
+                        const LEVEL_MONTHS = [0, 1, 2, 3, 6, 12, 24, 36, 72];
+                        const since = new Date();
+                        since.setMonth(since.getMonth() - (LEVEL_MONTHS[storedData.nitroLevel!] ?? 0));
+                        premiumSince = since;
+                    }
+                    const info = getNitroLevelInfo(nl);
+                    const date = premiumSince || new Date();
+                    const dateStr = `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear().toString().slice(-2)}`;
+                    const tooltipText = (
+                        <div className="gc-nitro-tooltip-card" style={{
+                            "--gc-nitro-bg": info.bg,
+                            "--gc-nitro-border": info.border,
+                            "--gc-nitro-arrow-color": info.arrowColor,
+                        } as any}>
+                            <img src={info.icon} className="gc-nitro-tooltip-icon" alt={info.title} />
+                            <h3 className="gc-nitro-tooltip-title">{info.title}</h3>
+                            <p className="gc-nitro-tooltip-subtitle">Subscriber since {dateStr}</p>
+                        </div>
+                    );
+                    badgeList.push({
+                        description: tooltipText as any,
+                        iconSrc: info.icon,
+                        position: 0,
+                        props: { style, title: "Nitro", tooltipClassName: "gc-nitro-tooltip-container" } as any
+                    });
                 }
 
                 // 4. HypeSquad Events

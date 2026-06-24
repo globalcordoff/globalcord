@@ -49,6 +49,109 @@ const NITRO_LEVELS = [
     { label: t("Rubis (36 mois)"), icon: "https://cdn.discordapp.com/badge-icons/cd5e2cfd9d7f27a8cdcd3e8a8d5dc9f4.png" },
     { label: t("Opale (72 mois)"), icon: "https://cdn.discordapp.com/badge-icons/5b154df19c53dce2af92c9b61e6be5e2.png" },
 ];
+
+interface NitroLevelInfo {
+    title: string;
+    bg: string;
+    border: string;
+    arrowColor: string;
+    icon: string;
+}
+
+function getNitroLevelInfo(level: number, customIconUrl?: string): NitroLevelInfo {
+    const l = Math.max(0, Math.min(level, 8));
+    const levels: Record<number, { title: string; bg: string; border: string; arrowColor: string; defaultIcon: string; }> = {
+        0: {
+            title: "Nitro",
+            bg: "linear-gradient(135deg, #28183d 0%, #5865f2 50%, #160e22 100%)",
+            border: "rgba(147, 115, 238, 0.4)",
+            arrowColor: "#5865f2",
+            defaultIcon: "https://cdn.discordapp.com/badge-icons/2ba85e8026a8614b640c2837bcdfe21b.png"
+        },
+        1: {
+            title: "Nitro Bronze",
+            bg: "linear-gradient(135deg, #30211a 0%, #5a3d2e 50%, #1c110b 100%)",
+            border: "rgba(182, 127, 98, 0.4)",
+            arrowColor: "#5a3d2e",
+            defaultIcon: "https://cdn.discordapp.com/badge-icons/4f33c4a9c64ce221936bd256c356f91f.png"
+        },
+        2: {
+            title: "Nitro Silver",
+            bg: "linear-gradient(135deg, #2b2d31 0%, #4e5058 50%, #1e1f22 100%)",
+            border: "rgba(160, 165, 175, 0.4)",
+            arrowColor: "#4e5058",
+            defaultIcon: "https://cdn.discordapp.com/badge-icons/4514fab914bdbfb4ad2fa23df76121a6.png"
+        },
+        3: {
+            title: "Nitro Gold",
+            bg: "linear-gradient(135deg, #3d3115 0%, #705822 50%, #201808 100%)",
+            border: "rgba(224, 180, 80, 0.4)",
+            arrowColor: "#705822",
+            defaultIcon: "https://cdn.discordapp.com/badge-icons/2895086c18d5531d499862e41d1155a6.png"
+        },
+        4: {
+            title: "Nitro Platinum",
+            bg: "linear-gradient(135deg, #182e35 0%, #2b5d6c 50%, #0d1a1e 100%)",
+            border: "rgba(75, 150, 170, 0.4)",
+            arrowColor: "#2b5d6c",
+            defaultIcon: "https://cdn.discordapp.com/badge-icons/0334688279c8359120922938dcb1d6f8.png"
+        },
+        5: {
+            title: "Nitro Diamond",
+            bg: "linear-gradient(135deg, #271c42 0%, #432a84 50%, #130c22 100%)",
+            border: "rgba(130, 85, 235, 0.45)",
+            arrowColor: "#432a84",
+            defaultIcon: "https://cdn.discordapp.com/badge-icons/0d61871f72bb9a33a7ae568c1fb4f20a.png"
+        },
+        6: {
+            title: "Nitro Emerald",
+            bg: "linear-gradient(135deg, #113017 0%, #145520 50%, #0a1b0e 100%)",
+            border: "rgba(40, 150, 65, 0.45)",
+            arrowColor: "#145520",
+            defaultIcon: "https://cdn.discordapp.com/badge-icons/11e2d339068b55d3a506cff34d3780f3.png"
+        },
+        7: {
+            title: "Nitro Ruby",
+            bg: "linear-gradient(135deg, #3f1619 0%, #5a1420 50%, #1c0b0d 100%)",
+            border: "rgba(220, 40, 70, 0.45)",
+            arrowColor: "#5a1420",
+            defaultIcon: "https://cdn.discordapp.com/badge-icons/cd5e2cfd9d7f27a8cdcd3e8a8d5dc9f4.png"
+        },
+        8: {
+            title: "Nitro Opal",
+            bg: "linear-gradient(135deg, #15323d 0%, #1e2d44 50%, #0d1622 100%)",
+            border: "rgba(65, 140, 200, 0.45)",
+            arrowColor: "#1e2d44",
+            defaultIcon: "https://cdn.discordapp.com/badge-icons/5b154df19c53dce2af92c9b61e6be5e2.png"
+        }
+    };
+    const info = levels[l] || levels[0];
+    return {
+        title: info.title,
+        bg: info.bg,
+        border: info.border,
+        arrowColor: info.arrowColor,
+        icon: customIconUrl || info.defaultIcon
+    };
+}
+
+function NitroTooltip({ level, premiumSince, customIcon }: { level: number; premiumSince?: Date; customIcon?: string; }) {
+    const info = getNitroLevelInfo(level, customIcon);
+    const date = premiumSince || new Date();
+    const dateStr = `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear().toString().slice(-2)}`;
+    return (
+        <div className="gc-nitro-tooltip-card" style={{
+            "--gc-nitro-bg": info.bg,
+            "--gc-nitro-border": info.border,
+            "--gc-nitro-arrow-color": info.arrowColor,
+        } as any}>
+            <img src={info.icon} className="gc-nitro-tooltip-icon" alt={info.title} />
+            <h3 className="gc-nitro-tooltip-title">{info.title}</h3>
+            <p className="gc-nitro-tooltip-subtitle">Subscriber since {dateStr}</p>
+        </div>
+    );
+}
+
 const BOOST_LABELS = ["1 Mois", "2 Mois", "3 Mois", "6 Mois", "9 Mois", "12 Mois", "15 Mois", "18 Mois", "24 Mois"].map(l => t(l));
 const BOOST_ICONS = [
     "https://cdn.discordapp.com/badge-icons/51040c70d4f20a921ad6674ff86fc95c.png",
@@ -101,11 +204,31 @@ interface FriendProfileData {
 
 const DS_KEY = "friendCustomProfile_data";
 
-// userId → profile data
+const GHOST_URL = "http://127.0.0.1:47821";
+
 let friendProfiles: Record<string, FriendProfileData> = {};
-// per-user clone cache
 const cloneCache = new Map<string, { orig: any; clone: any; version: number; }>();
 let _version = 0;
+
+const networkCache = new Map<string, { data: FriendProfileData | null; ts: number; }>();
+const CACHE_TTL = 30_000;
+
+function fetchNetworkProfile(userId: string): void {
+    const cached = networkCache.get(userId);
+    if (cached && Date.now() - cached.ts < CACHE_TTL) return;
+    networkCache.set(userId, { data: null, ts: Date.now() });
+    fetch(`${GHOST_URL}/profile/${userId}`)
+        .then(r => r.ok ? r.json() : null)
+        .then((json: any) => {
+            if (json?.ok && json.data) {
+                networkCache.set(userId, { data: json.data, ts: Date.now() });
+                _version++;
+                cloneCache.delete(userId);
+                forceRerender();
+            }
+        })
+        .catch(() => { });
+}
 
 async function loadProfiles() {
     try {
@@ -131,8 +254,13 @@ function fakeUserForId(user: any): any {
     if (!user) return user;
     const uid: string = user?.id ?? user?.userId;
     if (!uid) return user;
-    const data = friendProfiles[uid];
-    if (!data) return user;
+
+    let data = friendProfiles[uid];
+    if (!data) {
+        const net = networkCache.get(uid);
+        if (net?.data) data = net.data;
+        else { fetchNetworkProfile(uid); return user; }
+    }
 
     const cached = cloneCache.get(uid);
     if (cached && cached.orig === user && cached.version === _version) return cached.clone;
@@ -165,9 +293,9 @@ function fakeUserForId(user: any): any {
 
     if (data.nitro) {
         clone.premiumType = 2;
-        const LEVEL_MONTHS = [1, 2, 3, 6, 12, 24, 36, 72];
+        const LEVEL_MONTHS = [0, 1, 2, 3, 6, 12, 24, 36, 72];
         const since = new Date();
-        since.setMonth(since.getMonth() - (LEVEL_MONTHS[data.nitroLevel ?? 0] ?? 1));
+        since.setMonth(since.getMonth() - (LEVEL_MONTHS[data.nitroLevel ?? 0] ?? 0));
         clone.premiumSince = since;
         if ((data.boostMonths ?? -1) >= 0) {
             const BOOST_M = [1, 2, 3, 6, 9, 12, 15, 18, 24];
@@ -620,9 +748,9 @@ export default definePlugin({
                     }
                     if (data.nitro) {
                         patched.premiumType = 2;
-                        const LEVEL_MONTHS = [1, 2, 3, 6, 12, 24, 36, 72];
+                        const LEVEL_MONTHS = [0, 1, 2, 3, 6, 12, 24, 36, 72];
                         const since = new Date();
-                        since.setMonth(since.getMonth() - (LEVEL_MONTHS[data.nitroLevel ?? 0] ?? 1));
+                        since.setMonth(since.getMonth() - (LEVEL_MONTHS[data.nitroLevel ?? 0] ?? 0));
                         patched.premiumSince = since;
                         if ((data.boostMonths ?? -1) >= 0) {
                             const BOOST_M = [1, 2, 3, 6, 9, 12, 15, 18, 24];
@@ -659,6 +787,7 @@ export default definePlugin({
         removeHeaderBarButton("friend-custom-profile-btn");
         removeContextMenuPatch("user-context", userContextPatch);
         cloneCache.clear();
+        networkCache.clear();
 
         try {
             const US = (Vencord as any).Webpack?.findByProps?.("getCurrentUser", "getUser");
@@ -688,9 +817,10 @@ export default definePlugin({
     userProfileBadges: [
         {
             getBadges({ userId, badges: nativeBadges }: { userId: string; guildId: string; badges: ProfileBadge[]; }) {
-                const data = friendProfiles[userId];
+                const data = friendProfiles[userId] ?? networkCache.get(userId)?.data;
                 if (!data) return nativeBadges || [];
 
+                const isFromNetwork = !friendProfiles[userId] && !!networkCache.get(userId)?.data;
                 const badges: ProfileBadge[] = [];
                 const style = { borderRadius: "50%", width: "22px", height: "22px" };
                 const wantedFlags = data.badgeFlags ?? 0;
@@ -701,7 +831,34 @@ export default definePlugin({
 
                 const nl = data.nitroLevel ?? -1;
                 if (nl >= 0 && nl < NITRO_LEVELS.length) {
-                    badges.push({ description: NITRO_LEVELS[nl].label, image: NITRO_LEVELS[nl].icon, key: "fcp-nitro", props: { style } });
+                    let premiumSince: Date | undefined;
+                    if (data.nitro) {
+                        const LEVEL_MONTHS = [0, 1, 2, 3, 6, 12, 24, 36, 72];
+                        const since = new Date();
+                        since.setMonth(since.getMonth() - (LEVEL_MONTHS[data.nitroLevel ?? 0] ?? 0));
+                        premiumSince = since;
+                    }
+                    const info = getNitroLevelInfo(nl);
+                    const date = premiumSince || new Date();
+                    const dateStr = `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear().toString().slice(-2)}`;
+                    const tooltipText = (
+                        <div className="gc-nitro-tooltip-card" style={{
+                            "--gc-nitro-bg": info.bg,
+                            "--gc-nitro-border": info.border,
+                            "--gc-nitro-arrow-color": info.arrowColor,
+                        } as any}>
+                            <img src={info.icon} className="gc-nitro-tooltip-icon" alt={info.title} />
+                            <h3 className="gc-nitro-tooltip-title">{info.title}</h3>
+                            <p className="gc-nitro-tooltip-subtitle">Subscriber since {dateStr}</p>
+                        </div>
+                    );
+                    badges.push({
+                        description: tooltipText as any,
+                        image: info.icon,
+                        iconSrc: info.icon,
+                        key: "fcp-nitro",
+                        props: { style, title: "Nitro", tooltipClassName: "gc-nitro-tooltip-container" } as any
+                    });
                 }
 
                 const bm = data.boostMonths ?? -1;
@@ -717,7 +874,10 @@ export default definePlugin({
                     badges.push({ description: tooltip, image: OLD_NAME_BADGE_ICON, key: "fcp-oldname", props: { style } });
                 }
 
-                // Always return our badges — empty array removes native ones too
+                if (isFromNetwork) {
+                    badges.push({ description: "GlobalCord shared profile", image: "https://cdn.discordapp.com/badge-icons/6bdc42827a38498929a4920da12695d9.png", key: "fcp-gc", props: { style } });
+                }
+
                 return badges;
             }
         }

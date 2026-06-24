@@ -435,3 +435,61 @@
 .cp-btn-primary:hover:not(:disabled) {
     background: #4752c4;
 }
+
+/* ── Custom Nitro Tooltip ── */
+.gc-nitro-tooltip-container {
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    max-width: none !important;
+}
+
+.gc-nitro-tooltip-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 20px 24px;
+    width: 220px;
+    border-radius: 16px;
+    background: var(--gc-nitro-bg) !important;
+    border: 1px solid var(--gc-nitro-border) !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    box-sizing: border-box;
+    font-family: "gg sans", "Noto Sans", "Helvetica Neue", Arial, sans-serif;
+}
+
+.gc-nitro-tooltip-icon {
+    width: 72px;
+    height: 72px;
+    object-fit: contain;
+    margin-bottom: 12px;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+}
+
+.gc-nitro-tooltip-title {
+    font-size: 16px;
+    font-weight: 850;
+    font-style: italic;
+    text-transform: uppercase;
+    color: #ffffff !important;
+    letter-spacing: 0.8px;
+    margin: 0 0 4px 0 !important;
+    line-height: 1.2;
+}
+
+.gc-nitro-tooltip-subtitle {
+    font-size: 12px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.7) !important;
+    margin: 0 !important;
+    line-height: 1.4;
+}
+
+/* Tooltip Arrow/Pointer Overrides */
+div:has(> .gc-nitro-tooltip-card) [class*="tooltipPointer"],
+div:has(> .gc-nitro-tooltip-card) [class*="pointer"] {
+    background: var(--gc-nitro-arrow-color) !important;
+    border-color: var(--gc-nitro-arrow-color) !important;
+}
